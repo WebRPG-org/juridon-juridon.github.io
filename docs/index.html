@@ -55,6 +55,15 @@
   .cell-512 { background-color: #edc850; color: #f9f6f2; font-size: 28px; }
   .cell-1024 { background-color: #edc53f; color: #f9f6f2; font-size: 24px; }
   .cell-2048 { background-color: #edc22e; color: #f9f6f2; font-size: 24px; }
+/* 既存のスタイルはそのまま残し、以下を一番下に追加するぞ！ */
+  @keyframes pop {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  .cell-new {
+    animation: pop 0.2s ease-in-out;
+  }
 </style>
 </body>
 </html>
