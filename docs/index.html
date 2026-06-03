@@ -12,10 +12,12 @@
     <p><a href="https://juridon.github.io/minecraft-map-picture/">Minecraftの地図にドット絵かくやつ</a></p>
     <p><a href="/gameTest">kintoneのゲーム</a></p>
 
-    <div id="gam2048"></div>
+<div id="gam2048"></div>
 
 <style>
   #gam2048 {
+    position: relative; /* 演出画面を重ねるために必要だぞ */
+    overflow: hidden;    /* 画面外から飛んでくる文字を隠すためだぜ */
     width: max-content;
     background-color: #bbada0;
     padding: 10px;
@@ -49,31 +51,104 @@
   .cell-8 { background-color: #f2b179; color: #f9f6f2; }
   .cell-16 { background-color: #f59563; color: #f9f6f2; }
   .cell-32 { background-color: #f67c5f; color: #f9f6f2; }
-  .cell-64 { background-color: #f65e3b; color: #f9f6f2; }
+  .cell-64 { background-color: #f65e3b; color: #f9f6f2; } /* 演出が終わるとこの色になるぞ */
   .cell-128 { background-color: #edcf72; color: #f9f6f2; font-size: 28px; }
   .cell-256 { background-color: #edcc61; color: #f9f6f2; font-size: 28px; }
   .cell-512 { background-color: #edc850; color: #f9f6f2; font-size: 28px; }
   .cell-1024 { background-color: #edc53f; color: #f9f6f2; font-size: 24px; }
   .cell-2048 { background-color: #edc22e; color: #f9f6f2; font-size: 24px; }
-/* 既存のスタイルはそのまま残し、以下を一番下に追加するぞ！ */
+
+  /* 通常のアニメーション */
   @keyframes pop {
     0% { transform: scale(0); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
   }
-  .cell-new {
-    animation: pop 0.2s ease-in-out;
-  }
-/* これまでのCSSの一番下に追加してくれ！ */
+  .cell-new { animation: pop 0.2s ease-in-out; }
+
   @keyframes mergePop {
     0% { transform: scale(1); }
     50% { transform: scale(1.2); box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
     100% { transform: scale(1); }
   }
-  .cell-merge {
-    animation: mergePop 0.15s ease-in-out;
-    z-index: 10; /* 少し手前に出す */
+  .cell-merge { animation: mergePop 0.15s ease-in-out; z-index: 10; }
+
+  /* ==========================================
+     🔥 ここから「64」オマージュ演出用のスタイルだぜ！
+     ========================================== */
+  .overlay-64 {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(5, 5, 10, 0.92);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+  }
+  .flash-screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #ffffff;
+    opacity: 0;
+    z-index: 110;
+    pointer-events: none;
+  }
+  .n64-text {
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    font-size: 80px;
+    font-weight: bold;
+    letter-spacing: -4px;
+    position: absolute;
+    user-select: none;
+  }
+  /* 立体的な3D感を出すための何重ものテキストシャドウだ！ */
+  .shadow-3d-6 {
+    color: #003399; /* 紺・青 */
+    text-shadow: 
+      1px 1px 0 #001f5c, 2px 2px 0 #001f5c, 3px 3px 0 #001f5c,
+      4px 4px 0 #00b140, 5px 5px 0 #00b140, 6px 6px 0 #00b140, /* 緑のアクセント影 */
+      7px 7px 10px rgba(0,0,0,0.8);
+  }
+  .shadow-3d-4 {
+    color: #cc0000; /* 赤 */
+    text-shadow: 
+      1px 1px 0 #7a0000, 2px 2px 0 #7a0000, 3px 3px 0 #7a0000,
+      4px 4px 0 #ffcc00, 5px 5px 0 #ffcc00, 6px 6px 0 #ffcc00, /* 黄色のアクセント影 */
+      7px 7px 10px rgba(0,0,0,0.8);
+  }
+  
+  /* 演出のアニメーション速度や動きの制御 */
+  .animate-6 { animation: fly6 0.7s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  .animate-4 { animation: fly4 0.7s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  .animate-flash { animation: doFlash 0.35s forwards ease-out; }
+  .animate-logo { animation: logoPopUp 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .animate-fadeout { animation: fadeOverlay 0.4s forwards ease-in; }
+
+  @keyframes fly6 {
+    0% { transform: translate(-220px, -220px) rotate(-720deg) scale(0.3); opacity: 0; }
+    100% { transform: translate(-26px, 0px) rotate(0deg) scale(1); opacity: 1; }
+  }
+  @keyframes fly4 {
+    0% { transform: translate(220px, 220px) rotate(720deg) scale(0.3); opacity: 0; }
+    100% { transform: translate(26px, 0px) rotate(0deg) scale(1); opacity: 1; }
+  }
+  @keyframes doFlash {
+    0% { opacity: 0; }
+    15% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes logoPopUp {
+    0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+    70% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  @keyframes fadeOverlay {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
   }
 </style>
+
+    
 </body>
 </html>
