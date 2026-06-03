@@ -2,13 +2,15 @@ const container = document.getElementById('gam2048');
 const size = 4;
 let board = [];
 let newTilePos = null; 
-let mergedTilePositions = []; // 合体したタイルの位置を記録するぞ！
+let mergedTilePositions = []; 
+let isPlaying64Animation = false; // 演出中かどうかを管理するフラグだ！
 
 // ゲームの初期化
 function initGame() {
   board = Array.from({ length: size }, () => Array(size).fill(0));
   newTilePos = null;
   mergedTilePositions = [];
+  isPlaying64Animation = false;
   addRandomTile();
   addRandomTile();
   renderBoard();
@@ -41,12 +43,10 @@ function renderBoard() {
       
       cellDiv.className = `grid-cell ${value > 0 ? 'cell-' + value : ''}`;
       
-      // 新しく追加されたタイルのアニメーション
       if (newTilePos && newTilePos.r === r && newTilePos.c === c) {
         cellDiv.classList.add('cell-new');
       }
       
-      // 合体したタイルのアニメーション
       if (mergedTilePositions.some(pos => pos.r === r && pos.c === c)) {
         cellDiv.classList.add('cell-merge');
       }
@@ -61,12 +61,14 @@ function renderBoard() {
 // 行（または列）のスライドと合体判定
 function slide(row) {
   let newRow = row.filter(val => val !== 0);
-  let mergedIndices = []; // どのインデックスで合体したかメモするぜ
+  let mergedIndices = []; 
+  let created64 = false; // このスライドで64が生まれたか検知するぞ
   
   for (let i = 0; i < newRow.length - 1; i++) {
     if (newRow[i] !== 0 && newRow[i] === newRow[i + 1]) {
       newRow[i] *= 2;
       newRow[i + 1] = 0;
+      if (newRow[i] === 64) created64 = true; // 64誕生！
       mergedIndices.push(i);
     }
   }
@@ -78,7 +80,6 @@ function slide(row) {
   for (let i = 0; i < newRow.length; i++) {
     if (newRow[i] !== 0) {
       finalRow.push(newRow[i]);
-      // 空きを詰めた後の新しいインデックスを記録するぞ
       if (mergedIndices.includes(i)) {
         finalMergedIndices.push(currentIndex);
       }
@@ -89,14 +90,17 @@ function slide(row) {
   while (finalRow.length < size) {
     finalRow.push(0);
   }
-  return { row: finalRow, merged: finalMergedIndices };
+  return { row: finalRow, merged: finalMergedIndices, created64: created64 };
 }
 
 // 各方向への移動処理
 function move(direction) {
+  if (isPlaying64Animation) return; // 演出中はすべての操作を完全に無視するぞ！
+
   let changed = false;
+  let hasNew64 = false; // 今回の移動で64が新しくできたか
   let newBoard = Array.from({ length: size }, () => Array(size).fill(0));
-  mergedTilePositions = []; // 動かすたびにリセットだ！
+  mergedTilePositions = []; 
 
   for (let i = 0; i < size; i++) {
     let row = [];
@@ -110,14 +114,13 @@ function move(direction) {
       row.reverse();
     }
 
-    // スライドと合体の結果を受け取る
     let slideResult = slide(row);
     let newRow = slideResult.row;
     let mergedIndices = slideResult.merged;
+    if (slideResult.created64) hasNew64 = true; // 64のフラグを立てる
 
     if (direction === 'ArrowRight' || direction === 'ArrowDown') {
       newRow.reverse();
-      // 反転した時は合体した場所のインデックスも逆から数え直すぞ
       mergedIndices = mergedIndices.map(idx => size - 1 - idx);
     }
 
@@ -131,7 +134,6 @@ function move(direction) {
 
       newBoard[targetR][targetC] = newVal;
 
-      // 合体した場所の座標を記録するぜ
       if (mergedIndices.includes(j)) {
         mergedTilePositions.push({ r: targetR, c: targetC });
       }
@@ -140,10 +142,79 @@ function move(direction) {
 
   if (changed) {
     board = newBoard;
-    addRandomTile();
-    renderBoard();
-    checkGameOver();
+    
+    // もし64が生まれていたら、特別な演出を発動させるぞ！
+    if (hasNew64) {
+      trigger64Animation();
+    } else {
+      // 通常の処理
+      addRandomTile();
+      renderBoard();
+      checkGameOver();
+    }
   }
+}
+
+// 🎮 話題の「64」合体カットイン演出の処理だ！
+function trigger64Animation() {
+  isPlaying64Animation = true; // 操作をロック！
+
+  // 黒い背景のオーバーレイを作成
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay-64';
+
+  // フラッシュ用の真っ白な画面を作成
+  const flash = document.createElement('div');
+  flash.className = 'flash-screen';
+  overlay.appendChild(flash);
+
+  // 画面外から飛んでくる「6」
+  const text6 = document.createElement('div');
+  text6.className = 'n64-text shadow-3d-6 animate-6';
+  text6.textContent = '6';
+  overlay.appendChild(text6);
+
+  // 画面外から飛んでくる「4」
+  const text4 = document.createElement('div');
+  text4.className = 'n64-text shadow-3d-4 animate-4';
+  text4.textContent = '4';
+  overlay.appendChild(text4);
+
+  container.appendChild(overlay);
+
+  // タイムラインの制御
+  // 1. 0.7秒後（文字が中央で衝突した瞬間）
+  setTimeout(() => {
+    text6.remove();
+    text4.remove();
+
+    // 画面を真っ白にフラッシュさせる
+    flash.classList.add('animate-flash');
+
+    // 合体した巨大な「64」ロゴを出現させてポップアップさせる
+    const logo64 = document.createElement('div');
+    logo64.className = 'n64-text animate-logo';
+    logo64.innerHTML = '<span class="shadow-3d-6">6</span><span class="shadow-3d-4">4</span>';
+    overlay.appendChild(logo64);
+
+    // 2. さらに1.2秒後（プレイヤーがロゴをじっくり拝んだ後）、フェードアウト開始
+    setTimeout(() => {
+      overlay.classList.add('animate-fadeout');
+
+      // 3. さらに0.4秒後（フェードアウト完了）、演出終了してゲーム再開！
+      setTimeout(() => {
+        overlay.remove();
+        isPlaying64Animation = false; // ロック解除！
+
+        // 遅らせていた盤面の更新と次のタイルの生成を行うぞ
+        addRandomTile();
+        renderBoard();
+        checkGameOver();
+      }, 400);
+
+    }, 1200);
+
+  }, 700);
 }
 
 // ゲームオーバー判定
@@ -192,6 +263,28 @@ container.addEventListener('touchend', (e) => {
   handleSwipe();
 });
 
+function handleSwipe() {
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  if (Math.max(absDx, absDy) > 30) {
+    if (absDx > absDy) {
+      if (dx > 0) move('ArrowRight'); 
+      else move('ArrowLeft');         
+    } else {
+      if (dy > 0) move('ArrowDown');  
+      else move('Up'); // move('ArrowUp')のタイポ修正
+    }
+  }
+}
+// タイポ修正用
+function moveWrapper(dir) {
+  if(dir === 'Up') move('ArrowUp');
+  else move(dir);
+}
+// 念のためhandleSwipeの宛先を安全にするぜ
 function handleSwipe() {
   const dx = touchEndX - touchStartX;
   const dy = touchEndY - touchStartY;
