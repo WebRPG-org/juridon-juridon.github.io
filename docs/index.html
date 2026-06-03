@@ -4,11 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>てすと</title>
+    <script src="game2048.js" defer></script>
 </head>
 <body style="background-color:pink;">
     <h1>私のページ</h1>
     <p>ゆっくりしていってねー</p>
     <p><a href="https://juridon.github.io/minecraft-map-picture/">Minecraftの地図にドット絵かくやつ</a></p>
     <p><a href="/gameTest">kintoneのゲーム</a></p>
+
+    <div id="gam2048"></div>
+
+<style>
+  #gam2048 {
+    width: max-content;
+    background-color: #bbada0;
+    padding: 10px;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+    user-select: none;
+  }
+  .grid-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .grid-row:last-child {
+    margin-bottom: 0;
+  }
+  .grid-cell {
+    width: 80px;
+    height: 80px;
+    background-color: #cdc1b4;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: #776e65;
+  }
+  /* 各数字のカラー設定 */
+  .cell-2 { background-color: #eee4da; }
+  .cell-4 { background-color: #ede0c8; }
+  .cell-8 { background-color: #f2b179; color: #f9f6f2; }
+  .cell-16 { background-color: #f59563; color: #f9f6f2; }
+  .cell-32 { background-color: #f67c5f; color: #f9f6f2; }
+  .cell-64 { background-color: #f65e3b; color: #f9f6f2; }
+  .cell-128 { background-color: #edcf72; color: #f9f6f2; font-size: 28px; }
+  .cell-256 { background-color: #edcc61; color: #f9f6f2; font-size: 28px; }
+  .cell-512 { background-color: #edc850; color: #f9f6f2; font-size: 28px; }
+  .cell-1024 { background-color: #edc53f; color: #f9f6f2; font-size: 24px; }
+  .cell-2048 { background-color: #edc22e; color: #f9f6f2; font-size: 24px; }
+</style>
 </body>
 </html>
