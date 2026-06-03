@@ -138,6 +138,51 @@ window.game2048Listener = (e) => {
   }
 };
 document.addEventListener('keydown', window.game2048Listener);
+// --- ここからスマホ用のスワイプ処理だぜ！ ---
 
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+// 指が画面に触れたときのスタート位置を記録するぞ
+container.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, { passive: false });
+
+// ゲーム盤の上でスワイプしたときに、ブラウザ画面自体がスクロールしちゃうのを防ぐぜ
+container.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+}, { passive: false });
+
+// 指が離れたときのゴール位置を記録して、どっちに動かしたか判定するぞ
+container.addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
+  handleSwipe();
+});
+
+// スワイプの方向を計算して移動させる関数だ
+function handleSwipe() {
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+
+  // ほんのちょっと触れただけの誤作動を防ぐために、30px以上動かしたときだけ反応させるぜ
+  if (Math.max(absDx, absDy) > 30) {
+    if (absDx > absDy) {
+      // 横方向の動きの方が大きい場合
+      if (dx > 0) move('ArrowRight'); // 右スワイプ
+      else move('ArrowLeft');         // 左スワイプ
+    } else {
+      // 縦方向の動きの方が大きい場合
+      if (dy > 0) move('ArrowDown');  // 下スワイプ
+      else move('ArrowUp');           // 上スワイプ
+    }
+  }
+}
+// --- スマホ用のスワイプ処理ここまで ---
 // ゲームの開始
 initGame();
